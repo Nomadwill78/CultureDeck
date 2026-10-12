@@ -111,3 +111,22 @@ h1 em, h2 em { color: var(--orange); font-style: normal; }
   .finals-sticker { width: 92px; height: 92px; top: 24px; right: 1%; }
   .champion-sticker { width: 86px; height: 86px; top: 22px; right: 13%; }
 }
+
+
+/* Sudden-death lock-in states */
+.answer-button.locked { background: var(--lilac); border-color: var(--cobalt); box-shadow: 4px 4px 0 var(--cobalt); }
+.sudden-death-badge { min-width: 245px; }
+.sudden-death-badge strong { color: var(--yellow); }
+.sudden-death-badge small { color: var(--paper); font: 9px var(--mono); text-transform: uppercase; white-space: nowrap; }
+.deathmatch-reveal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 22px; max-width: 780px; }
+.reveal-card { display: grid; grid-template-columns: 1fr auto; gap: 5px 10px; border-top: 1px solid var(--ink); padding-top: 11px; }
+.reveal-card span { grid-column: 1 / -1; color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }
+.reveal-card strong { font: 700 17px var(--serif); line-height: 1.05; }
+.reveal-card b { align-self: end; font: 500 9px var(--mono); text-transform: uppercase; }
+.reveal-card.is-correct strong, .reveal-card.is-correct b { color: #168866; }
+.reveal-card.is-miss strong, .reveal-card.is-miss b { color: var(--orange); }
+@media (max-width: 680px) {
+  .sudden-death-badge { min-width: 0; }
+  .deathmatch-reveal { grid-template-columns: 1fr; }
+}
+.answer-button.locked.reveal { color: var(--paper); background: #168866; border-color: #168866; box-shadow: 4px 4px 0 var(--ink); }
