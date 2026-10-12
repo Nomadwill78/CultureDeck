@@ -17,7 +17,7 @@ const types = {
 
 const server = createServer(async (request, response) => {
   const url = new URL(request.url || '/', `http://${request.headers.host || 'localhost'}`);
-  const requested = url.pathname === '/' ? '/index.html' : url.pathname === '/manus-routes.json' ? '/public/manus-routes.json' : url.pathname;
+  const requested = url.pathname === '/' ? '/index.html' : url.pathname === '/manus-routes.json' ? '/public/manus-routes.json' : url.pathname.startsWith('/art/') ? `/public${url.pathname}` : url.pathname;
   const filePath = normalize(join(root, requested));
   if (!filePath.startsWith(root)) {
     response.writeHead(403);

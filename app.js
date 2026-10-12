@@ -1,5 +1,5 @@
 const questionBank = [
-  { category: 'Music', icon: '♫', art: '/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-1.webp', questions: [
+  { category: 'Music', icon: '♫', art: '/art/music-culture.png', questions: [
     { text: 'Which artist released the landmark album To Pimp a Butterfly?', answers: ['Kendrick Lamar', 'J. Cole', 'Anderson .Paak', 'Tyler, the Creator'], correct: 'Kendrick Lamar', note: 'Kendrick Lamar’s 2015 album became a defining work of 21st-century hip-hop.' },
     { text: 'The Miseducation of Lauryn Hill was the debut solo album of which artist?', answers: ['Lauryn Hill', 'Erykah Badu', 'Mary J. Blige', 'Jill Scott'], correct: 'Lauryn Hill', note: 'The album won the 1997 Grammy for Album of the Year.' },
     { text: 'Which record label was founded by Berry Gordy in Detroit in 1959?', answers: ['Motown', 'Stax', 'Def Jam', 'LaFace'], correct: 'Motown', note: 'Motown helped bring artists such as The Supremes, Marvin Gaye, and Stevie Wonder to the world.' },
@@ -11,7 +11,7 @@ const questionBank = [
     { text: 'Which duo recorded the 1998 hit “The Boy Is Mine”?', answers: ['Brandy and Monica', 'Mary J. Blige and Faith Evans', 'TLC and SWV', 'Beyoncé and Kelly Rowland'], correct: 'Brandy and Monica', note: 'Brandy and Monica’s duet became one of the defining R&B singles of the late 1990s.' },
     { text: 'Which group released both “Creep” and “Waterfalls”?', answers: ['TLC', 'En Vogue', '702', 'Total'], correct: 'TLC', note: 'TLC’s adventurous mix of R&B, hip-hop, and pop made them one of the era’s most influential groups.' }
   ]},
-  { category: 'Film + TV', icon: '✦', art: '/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-2.webp', questions: [
+  { category: 'Film + TV', icon: '✦', art: '/art/film-tv-culture.png', questions: [
     { text: 'Who became the first Black woman to win the Academy Award for Best Actress?', answers: ['Halle Berry', 'Viola Davis', 'Angela Bassett', 'Whoopi Goldberg'], correct: 'Halle Berry', note: 'Halle Berry won for Monster’s Ball at the 74th Academy Awards in 2002.' },
     { text: 'Which director wrote and directed the horror film Get Out?', answers: ['Jordan Peele', 'Ryan Coogler', 'Barry Jenkins', 'Ava DuVernay'], correct: 'Jordan Peele', note: 'Get Out won Jordan Peele the Oscar for Best Original Screenplay.' },
     { text: 'The fictional Hillman College is the setting for which beloved sitcom?', answers: ['A Different World', 'Living Single', 'Moesha', 'Girlfriends'], correct: 'A Different World', note: 'A Different World followed students at the fictional HBCU Hillman College.' },
@@ -23,7 +23,7 @@ const questionBank = [
     { text: 'Who played Cookie Lyon on the television drama Empire?', answers: ['Taraji P. Henson', 'Regina King', 'Kerry Washington', 'Gabourey Sidibe'], correct: 'Taraji P. Henson', note: 'Taraji P. Henson’s performance as Cookie Lyon became a signature role of 2010s television.' },
     { text: 'Who voiced Miles Morales in the animated film Spider-Man: Into the Spider-Verse?', answers: ['Shameik Moore', 'LaKeith Stanfield', 'Caleb McLaughlin', 'John David Washington'], correct: 'Shameik Moore', note: 'Shameik Moore voiced Miles Morales in the Oscar-winning 2018 animated film.' }
   ]},
-  { category: 'Sports', icon: '✺', art: '/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-3.webp', questions: [
+  { category: 'Sports', icon: '✺', art: '/art/sports-culture.png', questions: [
     { text: 'Who became the first Black woman to win the Wimbledon singles title?', answers: ['Althea Gibson', 'Serena Williams', 'Venus Williams', 'Zina Garrison'], correct: 'Althea Gibson', note: 'Althea Gibson won Wimbledon in 1957, after breaking barriers in tennis and golf.' },
     { text: 'Which gymnast became the first Black woman to win Olympic all-around gold?', answers: ['Gabby Douglas', 'Simone Biles', 'Dominique Dawes', 'Kerry Strug'], correct: 'Gabby Douglas', note: 'Gabby Douglas won the all-around title at the 2012 London Olympics.' },
     { text: 'Serena and Venus Williams trained on public courts in which California city?', answers: ['Compton', 'Oakland', 'Inglewood', 'Long Beach'], correct: 'Compton', note: 'Their early training in Compton became part of one of sport’s most powerful family stories.' },
@@ -35,7 +35,7 @@ const questionBank = [
     { text: 'Which basketball star founded the I PROMISE School in Akron, Ohio?', answers: ['LeBron James', 'Chris Paul', 'Dwyane Wade', 'Kevin Durant'], correct: 'LeBron James', note: 'The I PROMISE School opened in 2018 for students in LeBron James’s hometown of Akron.' },
     { text: 'Which Jamaican sprinter won eight Olympic gold medals and set multiple world records?', answers: ['Usain Bolt', 'Yohan Blake', 'Asafa Powell', 'Shelly-Ann Fraser-Pryce'], correct: 'Usain Bolt', note: 'Usain Bolt became one of the most recognizable athletes in the world through his dominance in sprinting.' }
   ]},
-  { category: 'History', icon: '⌘', art: '/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-4.webp', questions: [
+  { category: 'History', icon: '⌘', art: '/art/history-culture.png', questions: [
     { text: 'Madam C. J. Walker is widely recognized as America’s first self-made…', answers: ['Woman millionaire', 'Black astronaut', 'Female governor', 'Television producer'], correct: 'Woman millionaire', note: 'She built a successful hair-care business and became a major philanthropist.' },
     { text: 'The Montgomery Bus Boycott began after which activist refused to give up her seat?', answers: ['Rosa Parks', 'Ella Baker', 'Fannie Lou Hamer', 'Daisy Bates'], correct: 'Rosa Parks', note: 'Rosa Parks’s arrest helped ignite a 381-day boycott led by Black residents of Montgomery.' },
     { text: 'Juneteenth commemorates the 1865 announcement of emancipation in which state?', answers: ['Texas', 'Louisiana', 'Georgia', 'Mississippi'], correct: 'Texas', note: 'Major General Gordon Granger announced General Order No. 3 in Galveston on June 19, 1865.' },
@@ -47,7 +47,7 @@ const questionBank = [
     { text: 'Which city was the site of the 1968 sanitation workers strike supported by Martin Luther King Jr.?', answers: ['Memphis', 'Atlanta', 'Birmingham', 'Jackson'], correct: 'Memphis', note: 'The Memphis sanitation strike brought national attention to the workers’ demand for recognition and fair wages.' },
     { text: 'Which organizer and educator is celebrated for her grassroots work with SNCC and the civil rights movement?', answers: ['Ella Baker', 'Daisy Bates', 'Septima Clark', 'Dorothy Height'], correct: 'Ella Baker', note: 'Ella Baker championed participatory leadership and helped nurture local organizing across the South.' }
   ]},
-  { category: 'Internet culture', icon: '◎', art: '/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-5.webp', questions: [
+  { category: 'Internet culture', icon: '◎', art: '/art/internet-culture.png', questions: [
     { text: 'What does “FUBU,” the fashion brand founded in the 1990s, stand for?', answers: ['For Us, By Us', 'Fashion United By Us', 'Freedom Under Black Unity', 'From Us, Built Up'], correct: 'For Us, By Us', note: 'FUBU was founded by Daymond John, J. Alexander Martin, Keith Perrin, and Carlton E. Brown.' },
     { text: '“Black Twitter” is best understood as…', answers: ['A cultural conversation and community', 'A single media company', 'A news publication', 'A political party'], correct: 'A cultural conversation and community', note: 'The term describes a networked cultural space known for humor, commentary, creativity, and organizing.' },
     { text: 'When a post “goes viral,” what usually happens?', answers: ['It spreads rapidly online', 'It gets deleted by a platform', 'It becomes a paid advertisement', 'It is printed in a newspaper'], correct: 'It spreads rapidly online', note: 'Virality describes unusually fast and wide circulation across digital networks.' },
