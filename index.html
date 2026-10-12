@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2457e6" />
+    <meta name="description" content="Culture Deck is a timed Black pop culture trivia tournament for up to eight players." />
+    <title>Culture Deck — Black Pop Culture Tournament</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700;6..96,900&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="site-shell">
+      <header class="masthead">
+        <a class="brand" href="/" aria-label="Culture Deck home">
+          <span class="brand-mark" aria-hidden="true">C<span>D</span></span>
+          <span class="brand-name">Culture<br />Deck</span>
+        </a>
+        <div class="masthead-meta">
+          <span>Black pop culture tournament</span>
+          <span class="meta-dot" aria-hidden="true"></span>
+          <span>Edition 02</span>
+        </div>
+        <div class="masthead-number" aria-hidden="true">02</div>
+      </header>
+
+      <main id="app" tabindex="-1">
+        <section id="start-screen" class="screen start-screen" aria-labelledby="start-title">
+          <div class="start-copy">
+            <p class="eyebrow"><span class="eyebrow-line"></span> The culture edition</p>
+            <h1 id="start-title">Know the<br /><em>culture.</em><br />Own the moment.</h1>
+            <p class="lede">A live trivia tournament celebrating the people, moments, and movements that keep Black culture moving forward.</p>
+            <div class="start-actions">
+              <button id="start-button" class="button button-primary" type="button">Set up the tournament <span aria-hidden="true">↗</span></button>
+              <p class="microcopy">2–8 players. Pass the deck. Keep the score.</p>
+            </div>
+          </div>
+          <aside class="cover-card" aria-label="Tournament format">
+            <div class="cover-topline"><span>CD / 002</span><span>House rules</span></div>
+            <div class="cover-art" aria-hidden="true">
+              <div class="sun-disc"></div>
+              <div class="cover-rule"></div>
+              <div class="cover-letter">C</div>
+              <div class="cover-spark spark-one">✦</div>
+              <div class="cover-spark spark-two">+</div>
+              <div class="cover-icon-grid">
+                <img src="/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-1.webp" alt="" />
+                <img src="/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-2.webp" alt="" />
+                <img src="/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-3.webp" alt="" />
+                <img src="/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-4.webp" alt="" />
+                <img src="/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-5.webp" alt="" />
+              </div>
+              <div class="cover-caption">Five rounds.<br />Two finalists.<br />One crown.</div>
+            </div>
+            <div class="cover-footer">
+              <div><strong>05</strong><span>categories</span></div>
+              <div><strong>02:00</strong><span>per turn</span></div>
+              <div><strong>01:00</strong><span>finals</span></div>
+            </div>
+          </aside>
+        </section>
+
+        <section id="setup-screen" class="screen setup-screen" aria-labelledby="setup-title" hidden>
+          <div class="setup-intro">
+            <p class="eyebrow"><span class="eyebrow-line"></span> House rules</p>
+            <h2 id="setup-title">Build your<br /><em>lineup.</em></h2>
+            <p>Every player gets two minutes in each category. After all five categories, the two highest total scores enter the 60-second hard-question death match.</p>
+            <div class="rules-grid" aria-label="Tournament rules">
+              <div><strong>01</strong><span>Five categories</span></div>
+              <div><strong>02:00</strong><span>Each category turn</span></div>
+              <div><strong>TOP 2</strong><span>Advance to finals</span></div>
+            </div>
+          </div>
+          <div class="roster-panel">
+            <div class="roster-header"><span class="panel-label">Roster</span><span id="roster-count">2 / 8 players</span></div>
+            <div id="player-list" class="player-list" aria-label="Player names"></div>
+            <div class="roster-actions">
+              <button id="add-player-button" class="add-player-button" type="button"><span aria-hidden="true">+</span> Add player</button>
+              <button id="start-tournament-button" class="button button-primary" type="button">Lock the roster <span aria-hidden="true">↗</span></button>
+            </div>
+            <p id="setup-error" class="form-message" role="status" aria-live="polite"></p>
+            <div class="category-strip"><span class="panel-label">The five rounds</span><div id="category-list" class="category-list"></div></div>
+          </div>
+        </section>
+
+        <section id="round-screen" class="screen round-screen" aria-labelledby="round-question" hidden>
+          <div class="round-topbar">
+            <div class="turn-identity"><p class="eyebrow"><span class="eyebrow-line"></span> On the clock</p><strong id="round-player-name">Player 1</strong><span id="turn-order">Player 1 / 2</span></div>
+            <div class="timer-block" aria-live="polite"><span>Time left</span><strong id="timer-value">2:00</strong><div class="timer-track"><div id="timer-bar" class="timer-bar"></div></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-meta"><span id="round-category-label">Music</span><span id="round-question-label">Question 01 / 05</span></div>
+            <div class="progress-track"><div id="round-progress-bar" class="progress-bar"></div></div>
+          </div>
+          <div class="question-layout">
+            <div class="question-index" aria-hidden="true"><span id="round-question-number">01</span><span class="index-slash">/</span><span id="round-question-total">05</span></div>
+            <div class="question-panel">
+              <img id="round-category-art" class="question-art" src="/manus-storage/async-images/2gRvTTlxHfP6xYff5T1SOs/image-1.webp" alt="Music illustration" />
+              <div class="question-kicker"><span id="round-question-category">MUSIC</span><span class="kicker-rule"></span></div>
+              <h2 id="round-question">Question loading…</h2>
+              <div id="round-answers" class="answers" role="group" aria-label="Answer choices"></div>
+              <div id="round-feedback" class="feedback" role="status" aria-live="polite" hidden><div id="round-feedback-icon" class="feedback-icon" aria-hidden="true">✓</div><div><strong id="round-feedback-title">Correct!</strong><p id="round-feedback-copy"></p></div></div>
+              <button id="round-next-button" class="button button-primary next-button" type="button" hidden>Next question <span aria-hidden="true">→</span></button>
+            </div>
+          </div>
+        </section>
+
+        <section id="handoff-screen" class="screen centered-screen" aria-labelledby="handoff-title" hidden>
+          <p class="eyebrow"><span class="eyebrow-line"></span> Pass the deck</p>
+          <h2 id="handoff-title">Turn<br /><em>complete.</em></h2>
+          <p id="handoff-message" class="screen-lede">Player 1 finished Music.</p>
+          <div class="turn-summary"><span class="panel-label">Turn score</span><strong id="handoff-score">000</strong><span id="handoff-detail">Keep the momentum.</span></div>
+          <button id="handoff-button" class="button button-primary" type="button">Pass to the next player <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section id="category-results-screen" class="screen standings-screen" aria-labelledby="category-results-title" hidden>
+          <img class="screen-sticker results-sticker" src="/manus-storage/async-images/VZ61mBBEswRw78ImLxXYQ1/image-2.webp" alt="" aria-hidden="true" />
+          <p class="eyebrow"><span class="eyebrow-line"></span> Round report</p>
+          <h2 id="category-results-title">Category<br /><em>complete.</em></h2>
+          <p id="category-results-message" class="screen-lede">Here is where the standings sit after Music.</p>
+          <div class="standings-card"><div class="standings-card-header"><span>Place / Player</span><span>Round / Total</span></div><div id="category-standings" class="standings-list"></div></div>
+          <button id="next-category-button" class="button button-primary" type="button">Start the next category <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section id="deathmatch-intro-screen" class="screen deathmatch-intro" aria-labelledby="deathmatch-intro-title" hidden>
+          <img class="screen-sticker finals-sticker" src="/manus-storage/async-images/VZ61mBBEswRw78ImLxXYQ1/image-1.webp" alt="" aria-hidden="true" />
+          <div class="finals-eyebrow"><span class="eyebrow-line"></span> Final round</div>
+          <h2 id="deathmatch-intro-title">The final<br /><em>two.</em></h2>
+          <p class="screen-lede">The category rounds are done. The two highest total scores now face a 60-second run of hard questions.</p>
+          <div id="finalist-preview" class="finalist-preview"></div>
+          <button id="start-deathmatch-button" class="button button-primary" type="button">Enter the death match <span aria-hidden="true">↗</span></button>
+        </section>
+
+        <section id="deathmatch-screen" class="screen round-screen deathmatch-screen" aria-labelledby="deathmatch-question" hidden>
+          <div class="round-topbar"><div class="turn-identity"><p class="eyebrow"><span class="eyebrow-line"></span> Death match</p><strong id="deathmatch-player-name">Finalist</strong><span id="deathmatch-turn-order">Finalist 1 / 2</span></div><div class="timer-block finals-timer" aria-live="polite"><span>Hard round</span><strong id="deathmatch-timer-value">1:00</strong><div class="timer-track"><div id="deathmatch-timer-bar" class="timer-bar"></div></div></div></div>
+          <div class="progress-wrap"><div class="progress-meta"><span>Hard questions</span><span id="deathmatch-question-label">Question 01</span></div><div class="progress-track"><div id="deathmatch-progress-bar" class="progress-bar"></div></div></div>
+          <div class="question-layout"><div class="question-index" aria-hidden="true"><span id="deathmatch-question-number">01</span><span class="index-slash">/</span><span>∞</span></div><div class="question-panel"><div class="question-kicker"><span id="deathmatch-question-category">HARD / MUSIC</span><span class="kicker-rule"></span></div><h2 id="deathmatch-question">Question loading…</h2><div id="deathmatch-answers" class="answers" role="group" aria-label="Hard question answer choices"></div><div id="deathmatch-feedback" class="feedback" role="status" aria-live="polite" hidden><div id="deathmatch-feedback-icon" class="feedback-icon" aria-hidden="true">✓</div><div><strong id="deathmatch-feedback-title">Correct!</strong><p id="deathmatch-feedback-copy"></p></div></div><button id="deathmatch-next-button" class="button button-primary next-button" type="button" hidden>Next hard question <span aria-hidden="true">→</span></button></div></div>
+        </section>
+
+        <section id="deathmatch-pass-screen" class="screen centered-screen" aria-labelledby="deathmatch-pass-title" hidden>
+          <p class="eyebrow"><span class="eyebrow-line"></span> Finals handoff</p>
+          <h2 id="deathmatch-pass-title">One run<br /><em>locked.</em></h2>
+          <p id="deathmatch-pass-message" class="screen-lede">Pass the deck to the other finalist.</p>
+          <div class="turn-summary finals-summary"><span class="panel-label">Hard-round score</span><strong id="deathmatch-pass-score">000</strong><span>60 seconds. No second chances.</span></div>
+          <button id="deathmatch-pass-button" class="button button-primary" type="button">Start finalist two <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section id="champion-screen" class="screen champion-screen" aria-labelledby="champion-title" hidden>
+          <div class="champion-burst" aria-hidden="true">✦</div>
+          <img class="screen-sticker champion-sticker" src="/manus-storage/async-images/VZ61mBBEswRw78ImLxXYQ1/image-3.webp" alt="" aria-hidden="true" />
+          <p class="eyebrow"><span class="eyebrow-line"></span> Final score</p>
+          <h2 id="champion-title">Crown the<br /><em>culture.</em></h2>
+          <p id="champion-message" class="screen-lede">The deck has a winner.</p>
+          <div class="winner-card"><span class="panel-label">Culture Deck champion</span><strong id="winner-name">Winner</strong><div><span id="winner-score">000</span><span> hard-round points</span></div></div>
+          <div id="final-scoreboard" class="final-scoreboard"></div>
+          <div class="results-actions"><button id="play-again-button" class="button button-primary" type="button">Run it back <span aria-hidden="true">↗</span></button><button id="new-tournament-button" class="button button-secondary" type="button">New lineup</button></div>
+        </section>
+      </main>
+
+      <footer class="site-footer"><span>Made for the curious.</span><span>Culture Deck © 2026</span><span aria-hidden="true">✦</span></footer>
+    </div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
