@@ -130,3 +130,6 @@ h1 em, h2 em { color: var(--orange); font-style: normal; }
   .deathmatch-reveal { grid-template-columns: 1fr; }
 }
 .answer-button.locked.reveal { color: var(--paper); background: #168866; border-color: #168866; box-shadow: 4px 4px 0 var(--ink); }
+.load-error { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; padding: 16px 18px; background: #181716; color: #fff; border-radius: 6px; font: 16px/1.4 'Space Grotesk', system-ui, sans-serif; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.load-error p { margin: 0 0 12px; }
+.load-error button { font: 600 16px 'Space Grotesk', system-ui, sans-serif; padding: 10px 16px; border: 0; border-radius: 4px; background: #fff; color: #181716; cursor: pointer; }

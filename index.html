@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,700;6..96,900&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/styles.css?v=20261018" />
   </head>
   <body>
     <div class="site-shell">
@@ -161,6 +161,14 @@
 
       <footer class="site-footer"><span>Made for the curious.</span><span>Culture Deck © 2026</span><span aria-hidden="true">✦</span></footer>
     </div>
-    <script src="/app.js" type="module"></script>
+    <div id="load-error" class="load-error" role="alert" hidden>
+      <p><strong>The deck did not load.</strong> Your browser may be holding an old copy of the game.</p>
+      <button type="button" onclick="location.reload(true)">Reload Culture Deck</button>
+    </div>
+    <script>
+      setTimeout(function () { if (!window.__cultureDeckReady) document.getElementById('load-error').hidden = false; }, 4000);
+    </script>
+    <script nomodule>document.getElementById('load-error').hidden = false;</script>
+    <script src="/app.js?v=20261018" type="module"></script>
   </body>
 </html>
