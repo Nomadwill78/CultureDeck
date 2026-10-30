@@ -1,1 +1,5 @@
-IyBDdWx0dXJlIERlY2sKCkEgbG9jYWwgcGFzcy1hbmQtcGxheSB0cml2aWEgdG91cm5hbWVudCBnYW1lIGJ1aWx0IGZvciBCbGFjayBwb3AgY3VsdHVyZTogMiB0byA4IG5hbWVkIHBsYXllcnMsIHRpbWVkIHR1cm5zIGFjcm9zcyBmaXZlIGNhdGVnb3JpZXMgKE11c2ljLCBGaWxtICsgVFYsIFNwb3J0cywgSGlzdG9yeSwgSW50ZXJuZXQgY3VsdHVyZSksIHBlci1wbGF5ZXIgc2NvcmluZyB3aXRoIHN0cmVhayBib251c2VzLCBzdGFuZGluZ3MgYWZ0ZXIgZWFjaCBjYXRlZ29yeSwgYW5kIGEgZGVhdGgtbWF0Y2ggZmluYWwgZm9yIHRoZSB0b3AgdHdvIHBsYXllcnMuCgpSdW4gd2l0aCBgbm9kIHNlcnZlci5tanNgICgobnBtIHN0YXJ0KSkuIFNlZSBUT0RPLm1kIGZvciB0aGUgdG91cm5hbWVudCBkZWxpdmVyYWJsZXMgY2hlY2tsaXN0Lgo=
+# Culture Deck
+
+A local pass-and-play trivia tournament game built for Black pop culture: 2 to 8 named players, timed turns across five categories (Music, Film + TV, Sports, History, Internet culture), per-player scoring with streak bonuses, standings after each category, and a death-match final for the top two players.
+
+Run with `node server.mjs` (`npm start`). See TODO.md for the tournament deliverables checklist.
