@@ -24,3 +24,11 @@
 - [x] Add a projector presentation mode with larger questions and answer controls and reduced surrounding chrome.
 - [x] Add JSON and CSV results downloads from the champion screen.
 - [x] Add Standard, Large text, High contrast, and Reduced motion accessibility presets.
+
+## Phase 3 expansion
+
+- [x] Autosave an active tournament locally and offer resume or discard actions after a refresh or interrupted session.
+- [x] Restore the active screen, scores, settings, question position, and timer deadline from a saved tournament.
+- [x] Store the 10 most recent completed tournaments locally with winner, date, player count, and final scores.
+- [x] Provide a clear-history action for locally stored tournament summaries.
+- [x] Import a JSON question deck during setup, validate questions against the existing schema, merge valid questions into matching categories, and persist the imported deck locally.

@@ -148,6 +148,9 @@ const DIFFICULTIES = {
 const LIGHTNING_SECONDS = 30;
 const LIGHTNING_TURN_SIZE = 8;
 const SUDDEN_DEATH_POINTS = 2500;
+const SAVE_KEY = 'culture-deck-live-save-v1';
+const HISTORY_KEY = 'culture-deck-history-v1';
+const IMPORT_KEY = 'culture-deck-import-v1';
 let categories = questionBank.map(({ category, icon, art, questions }) => ({ category, icon, art, questions }));
 const state = {
   players: [], playerDraft: ['', ''], teamDraft: ['A', 'B'], teamMode: false, hostMode: false, accessibility: 'default', paused: false, categoryIndex: 0, playerIndex: 0, categoryOrder: categories.map(({ category }) => category), categoryQuestionDeck: [], turnQuestions: [], questionIndex: 0, turnScore: 0, streak: 0, answered: false, timerId: null, turnEndsAt: 0, turnFinished: false, phase: 'category', difficulty: 'competitive', draftMode: false,
@@ -165,6 +168,16 @@ function applyAccessibility() { document.body.classList.remove('large-text', 'hi
 function teamName(player) { return state.teamMode ? `Team ${player.team}` : ''; }
 function teamTotals() { const totals = {}; state.players.forEach((player) => { if (state.teamMode) totals[player.team] = (totals[player.team] || 0) + player.total; }); return totals; }
 function hostControlVisibility() { $('#host-controls').hidden = !state.hostMode || screens.round.hidden; }
+function activeScreen() { return Object.entries(screens).find(([, element]) => !element.hidden)?.[0] || 'start'; }
+function saveLiveGame() { if (!state.players.length || activeScreen() === 'start' || activeScreen() === 'champion') return; localStorage.setItem(SAVE_KEY, JSON.stringify({ state: { ...state, timerId: null }, screen: activeScreen(), savedAt: new Date().toISOString() })); }
+function clearLiveGame() { localStorage.removeItem(SAVE_KEY); }
+function savedGame() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch { return null; } }
+function renderHome() { const save = savedGame(); const resume = $('#resume-panel'); const history = historyList(); resume.hidden = !save; if (save) { const players = save.state.players || []; $('#resume-title').textContent = `${players.map((player) => player.name).join(' · ') || 'Tournament'} in progress`; $('#resume-detail').textContent = `Saved ${new Date(save.savedAt).toLocaleString()} · ${save.screen.replaceAll('-', ' ')}`; } $('#history-panel').hidden = history.length === 0; $('#history-list').innerHTML = history.map((event) => `<div class="history-row"><div><strong>${escapeHtml(event.winner)}</strong><span>${new Date(event.completedAt).toLocaleDateString()} · ${event.players.length} players</span></div><b>${event.scores.map((score) => `${escapeHtml(score.name)} ${score.total}`).join(' · ')}</b></div>`).join(''); }
+function historyList() { try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); } catch { return []; } }
+function recordTournament() { const winner = $('#winner-name').textContent; const history = [{ completedAt: new Date().toISOString(), winner, players: state.players.map(({ name }) => name), scores: state.players.map(({ name, total }) => ({ name, total })) }, ...historyList()].slice(0, 10); localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); clearLiveGame(); }
+function restoreSavedGame() { const save = savedGame(); if (!save) return; Object.assign(state, save.state, { timerId: null }); state.players = state.players || []; state.categoryQuestionDeck = state.categoryQuestionDeck || []; state.turnQuestions = state.turnQuestions || []; applyAccessibility(); if (save.screen === 'round') { showScreen('round'); renderRoundQuestion(); updateRoundTimer(); state.timerId = setInterval(updateRoundTimer, 250); } else if (save.screen === 'category-results') { state.phase === 'lightning' ? showLightningResults() : showCategoryResults(); } else if (save.screen === 'deathmatch') { showScreen('deathmatch'); renderDeathmatchQuestion(); } else { showScreen(save.screen || 'setup'); if (save.screen === 'setup') renderSetup(); } }
+function importDeckFile(file) { if (!file) return; const reader = new FileReader(); reader.onload = () => { try { const payload = JSON.parse(reader.result); let imported = 0; (payload.categories || []).forEach((externalCategory) => { const target = categories.find(({ category }) => category === externalCategory.category); if (!target) return; const valid = (externalCategory.questions || []).map((item) => validExternalQuestion(item, target.category)).filter(Boolean); target.questions.push(...valid); imported += valid.length; }); localStorage.setItem(IMPORT_KEY, JSON.stringify(payload)); $('#deck-import-status').textContent = imported ? `Imported ${imported} valid questions.` : 'No valid questions found for the five categories.'; renderSetup(); } catch { $('#deck-import-status').textContent = 'That file is not valid JSON.'; } }; reader.readAsText(file); }
+function loadImportedDeck() { try { const payload = JSON.parse(localStorage.getItem(IMPORT_KEY) || 'null'); (payload?.categories || []).forEach((externalCategory) => { const target = categories.find(({ category }) => category === externalCategory.category); if (!target) return; target.questions.push(...(externalCategory.questions || []).map((item) => validExternalQuestion(item, target.category)).filter(Boolean)); }); } catch { /* Keep the built-in deck available. */ } }
 function currentCategory() { return categories.find(({ category }) => category === state.categoryOrder[state.categoryIndex]) || categories[state.categoryIndex]; }
 function currentPlayer() { return state.players[state.playerIndex]; }
 function categoryScore(player, category = currentCategory().category) { return player.categoryScores[category] || 0; }
@@ -208,13 +221,13 @@ function moveDraft(index, direction) { const next = index + direction; if (next 
 function startTournament() {
   const names = state.playerDraft.map((name) => name.trim()).filter(Boolean);
   if (names.length < 2) { $('#setup-error').textContent = 'Add at least two players to start the tournament.'; $('#player-0').focus(); return; }
-  state.difficulty = $('#difficulty-select').value; state.draftMode = $('#draft-toggle').checked; state.teamMode = $('#team-toggle').checked; state.hostMode = $('#host-toggle').checked; state.accessibility = $('#accessibility-select').value; applyAccessibility(); if (!state.draftMode) state.categoryOrder = categories.map(({ category }) => category); state.players = names.map((name, index) => ({ name, team: state.teamDraft[index] || (index % 2 ? 'B' : 'A'), total: 0, categoryScores: Object.fromEntries(categories.map(({ category }) => [category, 0])), bestStreak: 0, deathmatchScore: 0, wagersUsed: {} })); state.phase = 'category'; state.categoryIndex = 0; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn();
+  clearLiveGame(); state.difficulty = $('#difficulty-select').value; state.draftMode = $('#draft-toggle').checked; state.teamMode = $('#team-toggle').checked; state.hostMode = $('#host-toggle').checked; state.accessibility = $('#accessibility-select').value; applyAccessibility(); if (!state.draftMode) state.categoryOrder = categories.map(({ category }) => category); state.players = names.map((name, index) => ({ name, team: state.teamDraft[index] || (index % 2 ? 'B' : 'A'), total: 0, categoryScores: Object.fromEntries(categories.map(({ category }) => [category, 0])), bestStreak: 0, deathmatchScore: 0, wagersUsed: {} })); state.phase = 'category'; state.categoryIndex = 0; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn();
 }
 function startTurn() {
   clearTimers();
   const deck = state.phase === 'lightning' ? shuffle(categories.flatMap(({ questions }) => questions)) : state.categoryQuestionDeck; const size = Math.min(state.phase === 'lightning' ? LIGHTNING_TURN_SIZE : difficulty().turnSize, deck.length); const start = (state.playerIndex * size) % deck.length;
   state.turnQuestions = Array.from({ length: size }, (_, i) => deck[(start + i) % deck.length]); state.questionIndex = 0; state.turnScore = 0; state.streak = 0; state.answered = false; state.turnFinished = false; state.turnEndsAt = Date.now() + (state.phase === 'lightning' ? LIGHTNING_SECONDS : difficulty().seconds) * 1000;
-  showScreen('round'); renderRoundQuestion(); updateRoundTimer(); state.timerId = setInterval(updateRoundTimer, 250);
+  showScreen('round'); renderRoundQuestion(); updateRoundTimer(); state.timerId = setInterval(updateRoundTimer, 250); saveLiveGame();
 }
 function updateRoundTimer() {
   if (state.turnFinished || state.paused) return;
@@ -282,7 +295,7 @@ function nextDeathmatchQuestion() {
   if (state.deathmatchWinner) { renderChampion(); return; }
   state.deathmatchQuestionIndex += 1; state.deathmatchPlayerIndex = 0; state.deathmatchSelections = [null, null]; state.deathmatchAnswered = false; state.deathmatchRoundResolved = false; showScreen('deathmatch'); renderDeathmatchQuestion(); $('#deathmatch-question').focus();
 }
-function renderChampion() { const [first, second] = [...state.deathmatchPlayers].sort((a, b) => b.deathmatchScore - a.deathmatchScore); const isTie = first.deathmatchScore === second.deathmatchScore; $('#winner-name').textContent = isTie ? 'Shared crown' : first.name; $('#winner-score').textContent = String(first.deathmatchScore).padStart(3, '0'); $('#champion-message').textContent = isTie ? `${first.name} and ${second.name} finished level in sudden death.` : `${first.name} won sudden death and the Culture Deck crown.`; $('#final-scoreboard').innerHTML = `<div><span>Finalist</span><strong>${escapeHtml(first.name)}</strong><b>${first.deathmatchScore}</b></div><div><span>Finalist</span><strong>${escapeHtml(second.name)}</strong><b>${second.deathmatchScore}</b></div>`; showScreen('champion'); }
+function renderChampion() { const [first, second] = [...state.deathmatchPlayers].sort((a, b) => b.deathmatchScore - a.deathmatchScore); const isTie = first.deathmatchScore === second.deathmatchScore; $('#winner-name').textContent = isTie ? 'Shared crown' : first.name; $('#winner-score').textContent = String(first.deathmatchScore).padStart(3, '0'); $('#champion-message').textContent = isTie ? `${first.name} and ${second.name} finished level in sudden death.` : `${first.name} won sudden death and the Culture Deck crown.`; $('#final-scoreboard').innerHTML = `<div><span>Finalist</span><strong>${escapeHtml(first.name)}</strong><b>${first.deathmatchScore}</b></div><div><span>Finalist</span><strong>${escapeHtml(second.name)}</strong><b>${second.deathmatchScore}</b></div>`; recordTournament(); renderHome(); showScreen('champion'); }
 function resultsPayload() { return { game: 'Culture Deck', exportedAt: new Date().toISOString(), difficulty: state.difficulty, teamMode: state.teamMode, categoryOrder: state.categoryOrder, players: state.players.map(({ name, team, total, categoryScores, bestStreak, deathmatchScore }) => ({ name, team: state.teamMode ? team : null, total, categoryScores, bestStreak, deathmatchScore })) }; }
 function downloadFile(filename, content, type) { const blob = new Blob([content], { type }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
 function exportResults(format) { const payload = resultsPayload(); if (format === 'json') downloadFile('culture-deck-results.json', JSON.stringify(payload, null, 2), 'application/json'); else { const header = ['Player', 'Team', 'Total', 'Best streak', 'Death-match score', ...categories.map(({ category }) => category)]; const rows = payload.players.map((player) => [player.name, player.team || '', player.total, player.bestStreak, player.deathmatchScore, ...categories.map(({ category }) => player.categoryScores[category] || 0)]); const csv = [header, ...rows].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n'); downloadFile('culture-deck-results.csv', csv, 'text/csv'); } }
@@ -312,7 +325,15 @@ $('#play-again-button').addEventListener('click', () => { state.playerDraft = st
 $('#export-json-button').addEventListener('click', () => exportResults('json'));
 $('#export-csv-button').addEventListener('click', () => exportResults('csv'));
 $('#new-tournament-button').addEventListener('click', resetTournament);
+$('#resume-button').addEventListener('click', restoreSavedGame);
+$('#discard-save-button').addEventListener('click', () => { clearLiveGame(); renderHome(); });
+$('#clear-history-button').addEventListener('click', () => { localStorage.removeItem(HISTORY_KEY); renderHome(); });
+$('#deck-file').addEventListener('change', (event) => importDeckFile(event.target.files[0]));
 document.addEventListener('keydown', (event) => { if (event.key === 'Enter' && event.target.matches('.answer-button')) event.target.click(); if (event.key.toLowerCase() === 'n' && !screens.round.hidden && !$('#round-next-button').hidden && !event.target.matches('input, textarea')) nextRoundQuestion(); });
+window.addEventListener('beforeunload', saveLiveGame);
+setInterval(saveLiveGame, 1000);
+loadImportedDeck();
 loadExternalDeck();
+renderHome();
 showScreen('start');
 window.__cultureDeckReady = true;

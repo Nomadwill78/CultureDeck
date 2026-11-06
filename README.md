@@ -13,3 +13,7 @@ The built-in question bank can be extended without editing `app.js`. Add valid q
 ## Phase 2 event tools
 
 Phase 2 adds optional team tournament mode, host controls for pausing, skipping, awarding a 50-point bonus, and entering projector mode, plus Standard, Large text, High contrast, and Reduced motion accessibility presets. Completed tournaments can be downloaded as JSON or CSV from the champion screen. Team assignments and event settings are configured before the roster is locked.
+
+## Phase 3 continuity tools
+
+Phase 3 keeps the game useful for recurring community events without requiring an account or database. An active tournament autosaves in the browser and can be resumed after a refresh or interrupted session. Completed events are kept in a local recent-history list capped at 10 tournaments, with a clear-history action. Hosts can also import a JSON question deck during setup; valid questions for the five existing categories are merged into the current game and persisted locally for future sessions.

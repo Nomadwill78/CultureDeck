@@ -36,6 +36,8 @@
               <button id="start-button" class="button button-primary" type="button">Set up the tournament <span aria-hidden="true">↗</span></button>
               <p class="microcopy">2–8 players. Pass the deck. Keep the score.</p>
             </div>
+            <div id="resume-panel" class="resume-panel" hidden aria-live="polite"><span class="panel-label">Saved event</span><strong id="resume-title">Tournament in progress</strong><span id="resume-detail"></span><div><button id="resume-button" class="button button-primary" type="button">Resume tournament →</button><button id="discard-save-button" class="button button-secondary" type="button">Discard save</button></div></div>
+            <div id="history-panel" class="history-panel" hidden><div class="history-header"><span class="panel-label">Recent events</span><button id="clear-history-button" class="text-button" type="button">Clear history</button></div><div id="history-list"></div></div>
           </div>
           <aside class="cover-card" aria-label="Tournament format">
             <div class="cover-topline"><span>CD / 002</span><span>House rules</span></div>
@@ -104,6 +106,7 @@
                 <select id="accessibility-select"><option value="default">Standard</option><option value="large-text">Large text</option><option value="high-contrast">High contrast</option><option value="reduced-motion">Reduced motion</option></select>
               </label>
               <p class="option-note">Team mode groups players for standings. Host controls can pause, skip, award a bonus, and switch to projector mode during play.</p>
+              <div class="deck-import"><label for="deck-file">Import a question deck</label><input id="deck-file" type="file" accept="application/json,.json" /><span id="deck-import-status" role="status" aria-live="polite">Use a JSON deck matching the community deck format.</span></div>
             </div>
           </div>
         </section>
