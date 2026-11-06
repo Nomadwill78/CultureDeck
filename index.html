@@ -95,6 +95,16 @@
               <div id="category-draft-list" class="category-draft-list" hidden></div>
               <p class="option-note">Draft mode lets the host arrange the five categories before the tournament begins. Each player may wager once per category.</p>
             </div>
+            <div class="phase-two-options" aria-labelledby="phase-two-options-label">
+              <span id="phase-two-options-label" class="panel-label">Phase 2 event settings</span>
+              <label class="toggle-label"><input id="team-toggle" type="checkbox" /> Team tournament mode</label>
+              <div id="team-assignment-list" class="team-assignment-list" hidden></div>
+              <label class="toggle-label"><input id="host-toggle" type="checkbox" /> Enable host controls</label>
+              <label class="select-label" for="accessibility-select">Accessibility preset
+                <select id="accessibility-select"><option value="default">Standard</option><option value="large-text">Large text</option><option value="high-contrast">High contrast</option><option value="reduced-motion">Reduced motion</option></select>
+              </label>
+              <p class="option-note">Team mode groups players for standings. Host controls can pause, skip, award a bonus, and switch to projector mode during play.</p>
+            </div>
           </div>
         </section>
 
@@ -119,6 +129,7 @@
               <button id="round-next-button" class="button button-primary next-button" type="button" hidden>Next question <span aria-hidden="true">→</span></button>
             </div>
           </div>
+          <div id="host-controls" class="host-controls" hidden aria-label="Host controls"><span class="panel-label">Host desk</span><button id="pause-button" class="button button-secondary" type="button">Pause clock</button><button id="skip-question-button" class="button button-secondary" type="button">Skip question</button><button id="bonus-button" class="button button-secondary" type="button">Award +50</button><button id="projector-button" class="button button-secondary" type="button">Projector mode</button></div>
         </section>
 
         <section id="handoff-screen" class="screen centered-screen" aria-labelledby="handoff-title" hidden>
@@ -177,7 +188,7 @@
           <p id="champion-message" class="screen-lede">The deck has a winner.</p>
           <div class="winner-card"><span class="panel-label">Culture Deck champion</span><strong id="winner-name">Winner</strong><div><span id="winner-score">000</span><span> sudden-death points</span></div></div>
           <div id="final-scoreboard" class="final-scoreboard"></div>
-          <div class="results-actions"><button id="play-again-button" class="button button-primary" type="button">Run it back <span aria-hidden="true">↗</span></button><button id="new-tournament-button" class="button button-secondary" type="button">New lineup</button></div>
+          <div class="results-actions"><button id="play-again-button" class="button button-primary" type="button">Run it back <span aria-hidden="true">↗</span></button><button id="export-json-button" class="button button-secondary" type="button">Download JSON</button><button id="export-csv-button" class="button button-secondary" type="button">Download CSV</button><button id="new-tournament-button" class="button button-secondary" type="button">New lineup</button></div>
         </section>
       </main>
 

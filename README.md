@@ -9,3 +9,7 @@ Run with `node server.mjs` (`npm start`). See TODO.md for the tournament deliver
 The setup screen now supports Casual, Competitive, and Expert difficulty presets, optional category-order drafting, and one optional wager per player per category. After the five category rounds, players can compete in a 30-second lightning round with double base points before entering sudden death.
 
 The built-in question bank can be extended without editing `app.js`. Add valid questions to `public/decks/community.json` under an existing category. Each question needs `text`, an `answers` array, and a `correct` answer that exactly matches one of the choices; `note` is optional. Invalid entries are ignored safely, and the game remains playable if the external deck is unavailable.
+
+## Phase 2 event tools
+
+Phase 2 adds optional team tournament mode, host controls for pausing, skipping, awarding a 50-point bonus, and entering projector mode, plus Standard, Large text, High contrast, and Reduced motion accessibility presets. Completed tournaments can be downloaded as JSON or CSV from the champion screen. Team assignments and event settings are configured before the roster is locked.

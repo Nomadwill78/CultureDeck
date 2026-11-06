@@ -150,7 +150,7 @@ const LIGHTNING_TURN_SIZE = 8;
 const SUDDEN_DEATH_POINTS = 2500;
 let categories = questionBank.map(({ category, icon, art, questions }) => ({ category, icon, art, questions }));
 const state = {
-  players: [], playerDraft: ['', ''], categoryIndex: 0, playerIndex: 0, categoryOrder: categories.map(({ category }) => category), categoryQuestionDeck: [], turnQuestions: [], questionIndex: 0, turnScore: 0, streak: 0, answered: false, timerId: null, turnEndsAt: 0, turnFinished: false, phase: 'category', difficulty: 'competitive', draftMode: false,
+  players: [], playerDraft: ['', ''], teamDraft: ['A', 'B'], teamMode: false, hostMode: false, accessibility: 'default', paused: false, categoryIndex: 0, playerIndex: 0, categoryOrder: categories.map(({ category }) => category), categoryQuestionDeck: [], turnQuestions: [], questionIndex: 0, turnScore: 0, streak: 0, answered: false, timerId: null, turnEndsAt: 0, turnFinished: false, phase: 'category', difficulty: 'competitive', draftMode: false,
   deathmatchPlayers: [], deathmatchPlayerIndex: 0, deathmatchQuestions: [], deathmatchQuestionIndex: 0, deathmatchSelections: [null, null], deathmatchAnswered: false, deathmatchRoundResolved: false, deathmatchWinner: null
 };
 const screens = ['start', 'setup', 'round', 'handoff', 'category-results', 'lightning-intro', 'deathmatch-intro', 'deathmatch', 'deathmatch-pass', 'champion'].reduce((map, name) => { map[name] = document.querySelector(`#${name}-screen`); return map; }, {});
@@ -159,8 +159,12 @@ const $ = (selector) => document.querySelector(selector);
 function shuffle(items) { return [...items].sort(() => Math.random() - 0.5); }
 function escapeHtml(value) { return value.replace(/[&<>'"]/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[character])); }
 function formatTime(milliseconds) { const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000)); return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`; }
-function showScreen(name) { Object.entries(screens).forEach(([key, element]) => { element.hidden = key !== name; }); $('#app').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+function showScreen(name) { Object.entries(screens).forEach(([key, element]) => { element.hidden = key !== name; }); hostControlVisibility(); $('#app').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function clearTimers() { if (state.timerId) clearInterval(state.timerId); state.timerId = null; }
+function applyAccessibility() { document.body.classList.remove('large-text', 'high-contrast', 'reduced-motion'); if (state.accessibility !== 'default') document.body.classList.add(state.accessibility); }
+function teamName(player) { return state.teamMode ? `Team ${player.team}` : ''; }
+function teamTotals() { const totals = {}; state.players.forEach((player) => { if (state.teamMode) totals[player.team] = (totals[player.team] || 0) + player.total; }); return totals; }
+function hostControlVisibility() { $('#host-controls').hidden = !state.hostMode || screens.round.hidden; }
 function currentCategory() { return categories.find(({ category }) => category === state.categoryOrder[state.categoryIndex]) || categories[state.categoryIndex]; }
 function currentPlayer() { return state.players[state.playerIndex]; }
 function categoryScore(player, category = currentCategory().category) { return player.categoryScores[category] || 0; }
@@ -189,19 +193,22 @@ function renderSetup() {
   $('#category-list').innerHTML = categories.map((category, index) => `<span class="category-chip"><img src="${category.art}" alt="" aria-hidden="true" /><span><b>0${index + 1}</b>${category.icon} ${category.category}</span></span>`).join('');
   $('#difficulty-select').value = state.difficulty;
   $('#draft-toggle').checked = state.draftMode;
+  $('#team-toggle').checked = state.teamMode; $('#host-toggle').checked = state.hostMode; $('#accessibility-select').value = state.accessibility; applyAccessibility();
   $('#category-draft-list').hidden = !state.draftMode;
   $('#category-draft-list').innerHTML = state.categoryOrder.map((categoryName, index) => `<div class="draft-row"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(categoryName)}</strong><button type="button" data-draft-up="${index}" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" data-draft-down="${index}" ${index === state.categoryOrder.length - 1 ? 'disabled' : ''}>↓</button></div>`).join('');
+  $('#team-assignment-list').hidden = !state.teamMode;
+  $('#team-assignment-list').innerHTML = state.playerDraft.map((name, index) => `<label><span>${escapeHtml(name.trim() || `Player ${index + 1}`)}</span><select data-team-player="${index}"><option value="A" ${state.teamDraft[index] === 'A' ? 'selected' : ''}>Team A</option><option value="B" ${state.teamDraft[index] === 'B' ? 'selected' : ''}>Team B</option><option value="C" ${state.teamDraft[index] === 'C' ? 'selected' : ''}>Team C</option><option value="D" ${state.teamDraft[index] === 'D' ? 'selected' : ''}>Team D</option></select></label>`).join('');
   document.querySelectorAll('.player-input').forEach((input) => input.addEventListener('input', () => { state.playerDraft[Number(input.id.replace('player-', ''))] = input.value; $('#setup-error').textContent = ''; }));
-  document.querySelectorAll('[data-remove-player]').forEach((button) => button.addEventListener('click', () => { state.playerDraft.splice(Number(button.dataset.removePlayer), 1); renderSetup(); }));
+  document.querySelectorAll('[data-remove-player]').forEach((button) => button.addEventListener('click', () => { const index = Number(button.dataset.removePlayer); state.playerDraft.splice(index, 1); state.teamDraft.splice(index, 1); renderSetup(); }));
   document.querySelectorAll('[data-draft-up]').forEach((button) => button.addEventListener('click', () => moveDraft(Number(button.dataset.draftUp), -1)));
   document.querySelectorAll('[data-draft-down]').forEach((button) => button.addEventListener('click', () => moveDraft(Number(button.dataset.draftDown), 1)));
+  document.querySelectorAll('[data-team-player]').forEach((select) => select.addEventListener('change', () => { state.teamDraft[Number(select.dataset.teamPlayer)] = select.value; }));
 }
 function moveDraft(index, direction) { const next = index + direction; if (next < 0 || next >= state.categoryOrder.length) return; [state.categoryOrder[index], state.categoryOrder[next]] = [state.categoryOrder[next], state.categoryOrder[index]]; renderSetup(); }
 function startTournament() {
   const names = state.playerDraft.map((name) => name.trim()).filter(Boolean);
   if (names.length < 2) { $('#setup-error').textContent = 'Add at least two players to start the tournament.'; $('#player-0').focus(); return; }
-  state.players = names.map((name) => ({ name, total: 0, categoryScores: Object.fromEntries(categories.map(({ category }) => [category, 0])), bestStreak: 0, deathmatchScore: 0, wagersUsed: {} }));
-  state.difficulty = $('#difficulty-select').value; state.draftMode = $('#draft-toggle').checked; if (!state.draftMode) state.categoryOrder = categories.map(({ category }) => category); state.phase = 'category'; state.categoryIndex = 0; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn();
+  state.difficulty = $('#difficulty-select').value; state.draftMode = $('#draft-toggle').checked; state.teamMode = $('#team-toggle').checked; state.hostMode = $('#host-toggle').checked; state.accessibility = $('#accessibility-select').value; applyAccessibility(); if (!state.draftMode) state.categoryOrder = categories.map(({ category }) => category); state.players = names.map((name, index) => ({ name, team: state.teamDraft[index] || (index % 2 ? 'B' : 'A'), total: 0, categoryScores: Object.fromEntries(categories.map(({ category }) => [category, 0])), bestStreak: 0, deathmatchScore: 0, wagersUsed: {} })); state.phase = 'category'; state.categoryIndex = 0; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn();
 }
 function startTurn() {
   clearTimers();
@@ -210,7 +217,7 @@ function startTurn() {
   showScreen('round'); renderRoundQuestion(); updateRoundTimer(); state.timerId = setInterval(updateRoundTimer, 250);
 }
 function updateRoundTimer() {
-  if (state.turnFinished) return;
+  if (state.turnFinished || state.paused) return;
   const totalMilliseconds = (state.phase === 'lightning' ? LIGHTNING_SECONDS : difficulty().seconds) * 1000; const remaining = state.turnEndsAt - Date.now(); const progress = Math.max(0, remaining / totalMilliseconds);
   $('#timer-value').textContent = formatTime(remaining); $('#timer-bar').style.width = `${progress * 100}%`; $('#timer-bar').classList.toggle('urgent', remaining <= 30000);
   if (remaining <= 0) finishTurn('time');
@@ -222,6 +229,10 @@ function renderRoundQuestion() {
   $('#round-answers').innerHTML = shuffle(question.answers).map((answer, index) => `<button class="answer-button" type="button" data-answer="${encodeURIComponent(answer)}"><span class="answer-letter">${String.fromCharCode(65 + index)}</span><span class="answer-text">${escapeHtml(answer)}</span></button>`).join('');
   document.querySelectorAll('#round-answers .answer-button').forEach((button) => button.addEventListener('click', () => answerRoundQuestion(button, question)));
 }
+function togglePause() { if (!state.hostMode || state.turnFinished) return; state.paused = !state.paused; $('#pause-button').textContent = state.paused ? 'Resume clock' : 'Pause clock'; $('#timer-value').setAttribute('aria-label', state.paused ? 'Clock paused' : 'Time remaining'); }
+function hostSkipQuestion() { if (!state.hostMode || state.turnFinished) return; state.paused = false; if (state.questionIndex >= state.turnQuestions.length - 1) finishTurn('complete'); else { state.questionIndex += 1; state.answered = false; renderRoundQuestion(); } }
+function hostAwardBonus() { if (!state.hostMode || state.turnFinished) return; const player = currentPlayer(); player.total += 50; if (state.phase !== 'lightning') player.categoryScores[currentCategory().category] += 50; state.turnScore += 50; $('#round-feedback').hidden = false; $('#round-feedback-title').textContent = 'Host bonus awarded.'; $('#round-feedback-icon').textContent = '+'; $('#round-feedback-copy').textContent = `${player.name} received 50 bonus points.`; }
+function toggleProjector() { document.body.classList.toggle('projector-mode'); $('#projector-button').textContent = document.body.classList.contains('projector-mode') ? 'Exit projector mode' : 'Projector mode'; }
 function answerRoundQuestion(button, question) {
   if (state.answered || state.turnFinished) return;
   state.answered = true; const selected = decodeURIComponent(button.dataset.answer); const isCorrect = selected === question.correct;
@@ -235,9 +246,9 @@ function finishTurn(reason) {
   const player = currentPlayer(); const category = roundCategory(); const hasNextPlayer = state.playerIndex < state.players.length - 1; $('#handoff-message').textContent = reason === 'time' ? `${player.name} ran out of time in ${category.category}.` : `${player.name} cleared the ${category.category} questions.`; $('#handoff-score').textContent = String(state.turnScore).padStart(3, '0'); $('#handoff-detail').textContent = hasNextPlayer ? `${state.players[state.playerIndex + 1].name} is next up.` : state.phase === 'lightning' ? 'That closes the lightning round for everyone.' : 'That closes the category for everyone.'; $('#handoff-button').textContent = hasNextPlayer ? `Pass to ${state.players[state.playerIndex + 1].name} →` : 'See the round report →'; showScreen('handoff');
 }
 function advanceAfterTurn() { if (state.playerIndex < state.players.length - 1) { state.playerIndex += 1; startTurn(); } else if (state.phase === 'lightning') showLightningResults(); else showCategoryResults(); }
-function showCategoryResults() {
-  const category = currentCategory(); const sorted = [...state.players].sort((a, b) => b.total - a.total); $('#category-results-title').innerHTML = `${category.category.replace(' + ', '<br />')}<br /><em>complete.</em>`; $('#category-results-message').textContent = `Here is where the standings sit after ${category.category}.`; $('#category-standings').innerHTML = sorted.map((player, index) => `<div class="standing-row"><div><span class="place-number">${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong></div><div><span>${categoryScore(player, category.category)} pts</span><strong>${player.total}</strong></div></div>`).join(''); $('#next-category-button').textContent = state.categoryIndex < categories.length - 1 ? `Start ${state.categoryOrder[state.categoryIndex + 1]} →` : 'Start the lightning round →'; showScreen('category-results'); }
-function showLightningResults() { const sorted = [...state.players].sort((a, b) => b.total - a.total); $('#category-results-title').innerHTML = 'Lightning<br /><em>complete.</em>'; $('#category-results-message').textContent = 'Double points have been added. The finalists are next.'; $('#category-standings').innerHTML = sorted.map((player, index) => `<div class="standing-row"><div><span class="place-number">${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong></div><div><span>Lightning total</span><strong>${player.total}</strong></div></div>`).join(''); $('#next-category-button').textContent = 'Enter the death match →'; showScreen('category-results'); }
+function standingMarkup(categoryName = currentCategory().category) { const sorted = [...state.players].sort((a, b) => b.total - a.total); const rows = sorted.map((player, index) => `<div class="standing-row"><div><span class="place-number">${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong>${state.teamMode ? `<small>${escapeHtml(teamName(player))}</small>` : ''}</div><div><span>${categoryName === 'Lightning round' ? 'Lightning total' : `${categoryScore(player, categoryName)} pts`}</span><strong>${player.total}</strong></div></div>`); if (!state.teamMode) return rows.join(''); const totals = Object.entries(teamTotals()).sort(([, a], [, b]) => b - a).map(([team, total]) => `<div class="standing-row team-standing"><div><span class="place-number">TEAM</span><strong>Team ${team}</strong></div><div><span>Team total</span><strong>${total}</strong></div></div>`); return `${totals.join('')}<div class="standings-subhead">Individual scores</div>${rows.join('')}`; }
+function showCategoryResults() { const category = currentCategory(); $('#category-results-title').innerHTML = `${category.category.replace(' + ', '<br />')}<br /><em>complete.</em>`; $('#category-results-message').textContent = `Here is where the standings sit after ${category.category}.`; $('#category-standings').innerHTML = standingMarkup(category.category); $('#next-category-button').textContent = state.categoryIndex < categories.length - 1 ? `Start ${state.categoryOrder[state.categoryIndex + 1]} →` : 'Start the lightning round →'; showScreen('category-results'); }
+function showLightningResults() { $('#category-results-title').innerHTML = 'Lightning<br /><em>complete.</em>'; $('#category-results-message').textContent = 'Double points have been added. The finalists are next.'; $('#category-standings').innerHTML = standingMarkup('Lightning round'); $('#next-category-button').textContent = 'Enter the death match →'; showScreen('category-results'); }
 function advanceAfterCategory() { if (state.categoryIndex < categories.length - 1) { state.categoryIndex += 1; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn(); } else if (state.phase !== 'lightning') { state.phase = 'lightning'; state.playerIndex = 0; showScreen('lightning-intro'); } else beginDeathmatch(); }
 function startLightning() { state.phase = 'lightning'; state.playerIndex = 0; startTurn(); }
 function beginDeathmatch() { clearTimers(); state.deathmatchPlayers = [...state.players].sort((a, b) => b.total - a.total).slice(0, 2); state.deathmatchQuestions = shuffle(hardQuestions); state.deathmatchPlayerIndex = 0; state.deathmatchQuestionIndex = 0; state.deathmatchSelections = [null, null]; state.deathmatchRoundResolved = false; state.deathmatchWinner = null; state.deathmatchPlayers.forEach((player) => { player.deathmatchScore = 0; }); $('#finalist-preview').innerHTML = state.deathmatchPlayers.map((player, index) => `<div class="finalist-card"><span class="place-number">0${index + 1}</span><strong>${escapeHtml(player.name)}</strong><span>${player.total} total points</span></div>`).join('<div class="versus">VS</div>'); showScreen('deathmatch-intro'); }
@@ -272,15 +283,25 @@ function nextDeathmatchQuestion() {
   state.deathmatchQuestionIndex += 1; state.deathmatchPlayerIndex = 0; state.deathmatchSelections = [null, null]; state.deathmatchAnswered = false; state.deathmatchRoundResolved = false; showScreen('deathmatch'); renderDeathmatchQuestion(); $('#deathmatch-question').focus();
 }
 function renderChampion() { const [first, second] = [...state.deathmatchPlayers].sort((a, b) => b.deathmatchScore - a.deathmatchScore); const isTie = first.deathmatchScore === second.deathmatchScore; $('#winner-name').textContent = isTie ? 'Shared crown' : first.name; $('#winner-score').textContent = String(first.deathmatchScore).padStart(3, '0'); $('#champion-message').textContent = isTie ? `${first.name} and ${second.name} finished level in sudden death.` : `${first.name} won sudden death and the Culture Deck crown.`; $('#final-scoreboard').innerHTML = `<div><span>Finalist</span><strong>${escapeHtml(first.name)}</strong><b>${first.deathmatchScore}</b></div><div><span>Finalist</span><strong>${escapeHtml(second.name)}</strong><b>${second.deathmatchScore}</b></div>`; showScreen('champion'); }
+function resultsPayload() { return { game: 'Culture Deck', exportedAt: new Date().toISOString(), difficulty: state.difficulty, teamMode: state.teamMode, categoryOrder: state.categoryOrder, players: state.players.map(({ name, team, total, categoryScores, bestStreak, deathmatchScore }) => ({ name, team: state.teamMode ? team : null, total, categoryScores, bestStreak, deathmatchScore })) }; }
+function downloadFile(filename, content, type) { const blob = new Blob([content], { type }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = filename; link.click(); URL.revokeObjectURL(link.href); }
+function exportResults(format) { const payload = resultsPayload(); if (format === 'json') downloadFile('culture-deck-results.json', JSON.stringify(payload, null, 2), 'application/json'); else { const header = ['Player', 'Team', 'Total', 'Best streak', 'Death-match score', ...categories.map(({ category }) => category)]; const rows = payload.players.map((player) => [player.name, player.team || '', player.total, player.bestStreak, player.deathmatchScore, ...categories.map(({ category }) => player.categoryScores[category] || 0)]); const csv = [header, ...rows].map((row) => row.map((value) => `"${String(value).replaceAll('"', '""')}"`).join(',')).join('\n'); downloadFile('culture-deck-results.csv', csv, 'text/csv'); } }
 
-function resetTournament() { clearTimers(); state.phase = 'category'; state.playerDraft = state.players.map((player) => player.name); if (state.playerDraft.length < 2) state.playerDraft = ['', '']; renderSetup(); showScreen('setup'); }
+function resetTournament() { clearTimers(); state.phase = 'category'; state.paused = false; state.playerDraft = state.players.map((player) => player.name); state.teamDraft = state.players.map((player) => player.team || 'A'); if (state.playerDraft.length < 2) { state.playerDraft = ['', '']; state.teamDraft = ['A', 'B']; } renderSetup(); showScreen('setup'); }
 
 $('#start-button').addEventListener('click', () => { renderSetup(); showScreen('setup'); });
-$('#add-player-button').addEventListener('click', () => { if (state.playerDraft.length < 8) { state.playerDraft.push(''); renderSetup(); document.querySelector(`#player-${state.playerDraft.length - 1}`).focus(); } });
+$('#add-player-button').addEventListener('click', () => { if (state.playerDraft.length < 8) { state.playerDraft.push(''); state.teamDraft.push(state.playerDraft.length % 2 ? 'A' : 'B'); renderSetup(); document.querySelector(`#player-${state.playerDraft.length - 1}`).focus(); } });
 $('#start-tournament-button').addEventListener('click', startTournament);
 $('#difficulty-select').addEventListener('change', () => { state.difficulty = $('#difficulty-select').value; });
 $('#draft-toggle').addEventListener('change', () => { state.draftMode = $('#draft-toggle').checked; renderSetup(); });
+$('#team-toggle').addEventListener('change', () => { state.teamMode = $('#team-toggle').checked; renderSetup(); });
+$('#host-toggle').addEventListener('change', () => { state.hostMode = $('#host-toggle').checked; renderSetup(); });
+$('#accessibility-select').addEventListener('change', () => { state.accessibility = $('#accessibility-select').value; applyAccessibility(); });
 $('#round-next-button').addEventListener('click', nextRoundQuestion);
+$('#pause-button').addEventListener('click', togglePause);
+$('#skip-question-button').addEventListener('click', hostSkipQuestion);
+$('#bonus-button').addEventListener('click', hostAwardBonus);
+$('#projector-button').addEventListener('click', toggleProjector);
 $('#handoff-button').addEventListener('click', advanceAfterTurn);
 $('#next-category-button').addEventListener('click', advanceAfterCategory);
 $('#start-lightning-button').addEventListener('click', startLightning);
@@ -288,6 +309,8 @@ $('#start-deathmatch-button').addEventListener('click', startDeathmatchTurn);
 $('#deathmatch-next-button').addEventListener('click', nextDeathmatchQuestion);
 $('#deathmatch-pass-button').addEventListener('click', startSecondDeathmatchLockIn);
 $('#play-again-button').addEventListener('click', () => { state.playerDraft = state.players.map((player) => player.name); renderSetup(); startTournament(); });
+$('#export-json-button').addEventListener('click', () => exportResults('json'));
+$('#export-csv-button').addEventListener('click', () => exportResults('csv'));
 $('#new-tournament-button').addEventListener('click', resetTournament);
 document.addEventListener('keydown', (event) => { if (event.key === 'Enter' && event.target.matches('.answer-button')) event.target.click(); if (event.key.toLowerCase() === 'n' && !screens.round.hidden && !$('#round-next-button').hidden && !event.target.matches('input, textarea')) nextRoundQuestion(); });
 loadExternalDeck();

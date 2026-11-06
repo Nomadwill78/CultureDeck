@@ -16,3 +16,11 @@
 - [x] Add one optional wager per player per category.
 - [x] Add a 30-second mixed-category lightning round with double base points.
 - [x] Load validated supplemental questions from `public/decks/community.json`.
+
+## Phase 2 expansion
+
+- [x] Add optional team tournament mode with configurable Team A–D assignments and team standings.
+- [x] Add host/moderator controls to pause or resume the clock, skip a question, award a 50-point bonus, and enter or exit projector mode.
+- [x] Add a projector presentation mode with larger questions and answer controls and reduced surrounding chrome.
+- [x] Add JSON and CSV results downloads from the champion screen.
+- [x] Add Standard, Large text, High contrast, and Reduced motion accessibility presets.
