@@ -8,3 +8,11 @@
 - Give each finalist a separate 1:00 hard-question run, with a dedicated hard-question bank and independent score.
 - Crown the finalist with the highest death-match score, handle a tied final score as a shared crown, and provide replay/new-lineup actions.
 - Preserve responsive, keyboard-accessible controls, visible focus states, semantic structure, and live timer/feedback status for assistive technology.
+
+## Phase 1 expansion
+
+- [x] Add Casual, Competitive, and Expert difficulty presets.
+- [x] Let the host draft the category order before starting.
+- [x] Add one optional wager per player per category.
+- [x] Add a 30-second mixed-category lightning round with double base points.
+- [x] Load validated supplemental questions from `public/decks/community.json`.

@@ -140,15 +140,20 @@ const hardQuestions = [
 ].map((item) => ({ ...item, category: 'Hard / Sudden death' }));
 
 
-const ROUND_SECONDS = 75;
-const TURN_SIZE = 10; // questions per player turn; each player gets a different set when the bank allows
+const DIFFICULTIES = {
+  casual: { label: 'Casual', seconds: 90, turnSize: 8, multiplier: 1 },
+  competitive: { label: 'Competitive', seconds: 75, turnSize: 10, multiplier: 1 },
+  expert: { label: 'Expert', seconds: 60, turnSize: 12, multiplier: 1.25 }
+};
+const LIGHTNING_SECONDS = 30;
+const LIGHTNING_TURN_SIZE = 8;
 const SUDDEN_DEATH_POINTS = 2500;
-const categories = questionBank.map(({ category, icon, art, questions }) => ({ category, icon, art, questions }));
+let categories = questionBank.map(({ category, icon, art, questions }) => ({ category, icon, art, questions }));
 const state = {
-  players: [], playerDraft: ['', ''], categoryIndex: 0, playerIndex: 0, categoryQuestionDeck: [], turnQuestions: [], questionIndex: 0, turnScore: 0, streak: 0, answered: false, timerId: null, turnEndsAt: 0, turnFinished: false,
+  players: [], playerDraft: ['', ''], categoryIndex: 0, playerIndex: 0, categoryOrder: categories.map(({ category }) => category), categoryQuestionDeck: [], turnQuestions: [], questionIndex: 0, turnScore: 0, streak: 0, answered: false, timerId: null, turnEndsAt: 0, turnFinished: false, phase: 'category', difficulty: 'competitive', draftMode: false,
   deathmatchPlayers: [], deathmatchPlayerIndex: 0, deathmatchQuestions: [], deathmatchQuestionIndex: 0, deathmatchSelections: [null, null], deathmatchAnswered: false, deathmatchRoundResolved: false, deathmatchWinner: null
 };
-const screens = ['start', 'setup', 'round', 'handoff', 'category-results', 'deathmatch-intro', 'deathmatch', 'deathmatch-pass', 'champion'].reduce((map, name) => { map[name] = document.querySelector(`#${name}-screen`); return map; }, {});
+const screens = ['start', 'setup', 'round', 'handoff', 'category-results', 'lightning-intro', 'deathmatch-intro', 'deathmatch', 'deathmatch-pass', 'champion'].reduce((map, name) => { map[name] = document.querySelector(`#${name}-screen`); return map; }, {});
 const $ = (selector) => document.querySelector(selector);
 
 function shuffle(items) { return [...items].sort(() => Math.random() - 0.5); }
@@ -156,39 +161,64 @@ function escapeHtml(value) { return value.replace(/[&<>'"]/g, (character) => ({ 
 function formatTime(milliseconds) { const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000)); return `${Math.floor(totalSeconds / 60)}:${String(totalSeconds % 60).padStart(2, '0')}`; }
 function showScreen(name) { Object.entries(screens).forEach(([key, element]) => { element.hidden = key !== name; }); $('#app').focus(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
 function clearTimers() { if (state.timerId) clearInterval(state.timerId); state.timerId = null; }
-function currentCategory() { return categories[state.categoryIndex]; }
+function currentCategory() { return categories.find(({ category }) => category === state.categoryOrder[state.categoryIndex]) || categories[state.categoryIndex]; }
 function currentPlayer() { return state.players[state.playerIndex]; }
 function categoryScore(player, category = currentCategory().category) { return player.categoryScores[category] || 0; }
 function prepareCategoryQuestionDeck() { state.categoryQuestionDeck = shuffle(currentCategory().questions); }
+function difficulty() { return DIFFICULTIES[state.difficulty] || DIFFICULTIES.competitive; }
+function roundCategory() { return state.phase === 'lightning' ? { category: 'Lightning round', icon: '⚡', art: '/art/future-spark.png' } : currentCategory(); }
+function pointsFor(isCorrect, wager = 0) { if (!isCorrect) return -wager; const base = Math.round(100 * difficulty().multiplier) * (state.phase === 'lightning' ? 2 : 1); return base + Math.max(0, state.streak - 1) * 25 + wager; }
+function validExternalQuestion(item, category) { return item && typeof item.text === 'string' && Array.isArray(item.answers) && item.answers.length >= 2 && item.answers.includes(item.correct) ? { ...item, category, note: item.note || 'Keep the conversation going.' } : null; }
+async function loadExternalDeck() {
+  try {
+    const response = await fetch('/decks/community.json', { cache: 'no-store' });
+    if (!response.ok) return;
+    const payload = await response.json();
+    (payload.categories || []).forEach((externalCategory) => {
+      const target = categories.find(({ category }) => category === externalCategory.category);
+      if (!target) return;
+      target.questions.push(...(externalCategory.questions || []).map((item) => validExternalQuestion(item, target.category)).filter(Boolean));
+    });
+    renderSetup();
+  } catch { /* The built-in deck remains playable offline. */ }
+}
 
 function renderSetup() {
   $('#roster-count').textContent = `${state.playerDraft.length} / 8 players`;
   $('#player-list').innerHTML = state.playerDraft.map((name, index) => `<div class="player-row"><span class="player-number">${String(index + 1).padStart(2, '0')}</span><input id="player-${index}" class="player-input" type="text" maxlength="22" value="${escapeHtml(name)}" placeholder="Player ${index + 1}" aria-label="Player ${index + 1} name" /><button class="remove-player" type="button" data-remove-player="${index}" aria-label="Remove player ${index + 1}" ${state.playerDraft.length <= 2 ? 'hidden' : ''}>×</button></div>`).join('');
   $('#category-list').innerHTML = categories.map((category, index) => `<span class="category-chip"><img src="${category.art}" alt="" aria-hidden="true" /><span><b>0${index + 1}</b>${category.icon} ${category.category}</span></span>`).join('');
+  $('#difficulty-select').value = state.difficulty;
+  $('#draft-toggle').checked = state.draftMode;
+  $('#category-draft-list').hidden = !state.draftMode;
+  $('#category-draft-list').innerHTML = state.categoryOrder.map((categoryName, index) => `<div class="draft-row"><span>${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(categoryName)}</strong><button type="button" data-draft-up="${index}" ${index === 0 ? 'disabled' : ''}>↑</button><button type="button" data-draft-down="${index}" ${index === state.categoryOrder.length - 1 ? 'disabled' : ''}>↓</button></div>`).join('');
   document.querySelectorAll('.player-input').forEach((input) => input.addEventListener('input', () => { state.playerDraft[Number(input.id.replace('player-', ''))] = input.value; $('#setup-error').textContent = ''; }));
   document.querySelectorAll('[data-remove-player]').forEach((button) => button.addEventListener('click', () => { state.playerDraft.splice(Number(button.dataset.removePlayer), 1); renderSetup(); }));
+  document.querySelectorAll('[data-draft-up]').forEach((button) => button.addEventListener('click', () => moveDraft(Number(button.dataset.draftUp), -1)));
+  document.querySelectorAll('[data-draft-down]').forEach((button) => button.addEventListener('click', () => moveDraft(Number(button.dataset.draftDown), 1)));
 }
+function moveDraft(index, direction) { const next = index + direction; if (next < 0 || next >= state.categoryOrder.length) return; [state.categoryOrder[index], state.categoryOrder[next]] = [state.categoryOrder[next], state.categoryOrder[index]]; renderSetup(); }
 function startTournament() {
   const names = state.playerDraft.map((name) => name.trim()).filter(Boolean);
   if (names.length < 2) { $('#setup-error').textContent = 'Add at least two players to start the tournament.'; $('#player-0').focus(); return; }
-  state.players = names.map((name) => ({ name, total: 0, categoryScores: Object.fromEntries(categories.map(({ category }) => [category, 0])), bestStreak: 0, deathmatchScore: 0 }));
-  state.categoryIndex = 0; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn();
+  state.players = names.map((name) => ({ name, total: 0, categoryScores: Object.fromEntries(categories.map(({ category }) => [category, 0])), bestStreak: 0, deathmatchScore: 0, wagersUsed: {} }));
+  state.difficulty = $('#difficulty-select').value; state.draftMode = $('#draft-toggle').checked; if (!state.draftMode) state.categoryOrder = categories.map(({ category }) => category); state.phase = 'category'; state.categoryIndex = 0; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn();
 }
 function startTurn() {
   clearTimers();
-  const deck = state.categoryQuestionDeck; const size = Math.min(TURN_SIZE, deck.length); const start = (state.playerIndex * size) % deck.length;
-  state.turnQuestions = Array.from({ length: size }, (_, i) => deck[(start + i) % deck.length]); state.questionIndex = 0; state.turnScore = 0; state.streak = 0; state.answered = false; state.turnFinished = false; state.turnEndsAt = Date.now() + ROUND_SECONDS * 1000;
+  const deck = state.phase === 'lightning' ? shuffle(categories.flatMap(({ questions }) => questions)) : state.categoryQuestionDeck; const size = Math.min(state.phase === 'lightning' ? LIGHTNING_TURN_SIZE : difficulty().turnSize, deck.length); const start = (state.playerIndex * size) % deck.length;
+  state.turnQuestions = Array.from({ length: size }, (_, i) => deck[(start + i) % deck.length]); state.questionIndex = 0; state.turnScore = 0; state.streak = 0; state.answered = false; state.turnFinished = false; state.turnEndsAt = Date.now() + (state.phase === 'lightning' ? LIGHTNING_SECONDS : difficulty().seconds) * 1000;
   showScreen('round'); renderRoundQuestion(); updateRoundTimer(); state.timerId = setInterval(updateRoundTimer, 250);
 }
 function updateRoundTimer() {
   if (state.turnFinished) return;
-  const remaining = state.turnEndsAt - Date.now(); const progress = Math.max(0, remaining / (ROUND_SECONDS * 1000));
+  const totalMilliseconds = (state.phase === 'lightning' ? LIGHTNING_SECONDS : difficulty().seconds) * 1000; const remaining = state.turnEndsAt - Date.now(); const progress = Math.max(0, remaining / totalMilliseconds);
   $('#timer-value').textContent = formatTime(remaining); $('#timer-bar').style.width = `${progress * 100}%`; $('#timer-bar').classList.toggle('urgent', remaining <= 30000);
   if (remaining <= 0) finishTurn('time');
 }
 function renderRoundQuestion() {
-  const question = state.turnQuestions[state.questionIndex]; const category = currentCategory(); const player = currentPlayer(); const number = state.questionIndex + 1;
+  const question = state.turnQuestions[state.questionIndex]; const category = roundCategory(); const player = currentPlayer(); const number = state.questionIndex + 1;
   $('#round-player-name').textContent = player.name; $('#turn-order').textContent = `Player ${state.playerIndex + 1} / ${state.players.length}`; $('#round-category-label').textContent = category.category; $('#round-question-label').textContent = `Question ${String(number).padStart(2, '0')} / ${String(state.turnQuestions.length).padStart(2, '0')}`; $('#round-progress-bar').style.width = `${(number / state.turnQuestions.length) * 100}%`; $('#round-question-number').textContent = String(number).padStart(2, '0'); $('#round-question-total').textContent = String(state.turnQuestions.length).padStart(2, '0'); $('#round-question-category').textContent = category.category.toUpperCase(); $('#round-category-art').src = category.art; $('#round-category-art').alt = `${category.category} illustration`; $('#round-question').textContent = question.text; $('#round-feedback').hidden = true; $('#round-next-button').hidden = true;
+  $('#round-question-category').textContent = `${category.category}${state.phase === 'lightning' ? ' / DOUBLE POINTS' : ''}`.toUpperCase(); $('#round-category-art').src = category.art; $('#round-category-art').alt = `${category.category} illustration`; $('#round-question').textContent = question.text; $('#round-feedback').hidden = true; $('#round-next-button').hidden = true; $('#wager-control').hidden = state.phase === 'lightning'; const wagerAlreadyUsed = Boolean(currentPlayer().wagersUsed[currentCategory().category]); $('#wager-select').value = '0'; $('#wager-select').disabled = wagerAlreadyUsed; $('#wager-status').textContent = wagerAlreadyUsed ? 'Wager used for this category' : 'One wager per category';
   $('#round-answers').innerHTML = shuffle(question.answers).map((answer, index) => `<button class="answer-button" type="button" data-answer="${encodeURIComponent(answer)}"><span class="answer-letter">${String.fromCharCode(65 + index)}</span><span class="answer-text">${escapeHtml(answer)}</span></button>`).join('');
   document.querySelectorAll('#round-answers .answer-button').forEach((button) => button.addEventListener('click', () => answerRoundQuestion(button, question)));
 }
@@ -196,18 +226,20 @@ function answerRoundQuestion(button, question) {
   if (state.answered || state.turnFinished) return;
   state.answered = true; const selected = decodeURIComponent(button.dataset.answer); const isCorrect = selected === question.correct;
   document.querySelectorAll('#round-answers .answer-button').forEach((choice) => { choice.disabled = true; if (decodeURIComponent(choice.dataset.answer) === question.correct) choice.classList.add('reveal'); });
-  if (isCorrect) { state.streak += 1; state.turnScore += 100 + Math.max(0, state.streak - 1) * 25; state.players[state.playerIndex].categoryScores[currentCategory().category] += 100 + Math.max(0, state.streak - 1) * 25; state.players[state.playerIndex].total += 100 + Math.max(0, state.streak - 1) * 25; state.players[state.playerIndex].bestStreak = Math.max(state.players[state.playerIndex].bestStreak, state.streak); button.classList.remove('reveal'); button.classList.add('correct'); $('#round-feedback-title').textContent = state.streak > 1 ? `Correct — ${state.streak} in a row!` : 'Correct!'; $('#round-feedback-icon').textContent = '✓'; $('#round-feedback-copy').textContent = `${100 + Math.max(0, state.streak - 1) * 25} points. ${question.note}`; } else { state.streak = 0; button.classList.add('incorrect'); $('#round-feedback-title').textContent = 'Not quite.'; $('#round-feedback-icon').textContent = '↗'; $('#round-feedback-copy').textContent = `The answer is ${question.correct}. ${question.note}`; }
+  const wager = state.phase === 'lightning' ? 0 : Number($('#wager-select').value); const player = currentPlayer(); const categoryName = currentCategory().category; if (wager) player.wagersUsed[categoryName] = true; if (isCorrect) state.streak += 1; const points = pointsFor(isCorrect, wager); state.turnScore += points; if (state.phase !== 'lightning') player.categoryScores[categoryName] += points; player.total += points; if (isCorrect) { player.bestStreak = Math.max(player.bestStreak, state.streak); button.classList.remove('reveal'); button.classList.add('correct'); $('#round-feedback-title').textContent = state.streak > 1 ? `Correct — ${state.streak} in a row!` : 'Correct!'; $('#round-feedback-icon').textContent = '✓'; $('#round-feedback-copy').textContent = `${points.toLocaleString()} points${wager ? `, including your ${wager}-point wager` : ''}. ${question.note}`; } else { state.streak = 0; button.classList.add('incorrect'); $('#round-feedback-title').textContent = 'Not quite.'; $('#round-feedback-icon').textContent = '↗'; $('#round-feedback-copy').textContent = `${points < 0 ? `${points} points. ` : ''}The answer is ${question.correct}. ${question.note}`; }
   $('#round-feedback').hidden = false; $('#round-next-button').hidden = false; $('#round-next-button').focus();
 }
 function nextRoundQuestion() { if (state.questionIndex >= state.turnQuestions.length - 1) finishTurn('complete'); else { state.questionIndex += 1; state.answered = false; renderRoundQuestion(); $('#round-question').focus(); } }
 function finishTurn(reason) {
   if (state.turnFinished) return; state.turnFinished = true; clearTimers();
-  const player = currentPlayer(); const category = currentCategory(); const hasNextPlayer = state.playerIndex < state.players.length - 1; $('#handoff-message').textContent = reason === 'time' ? `${player.name} ran out of time in ${category.category}.` : `${player.name} cleared the ${category.category} questions.`; $('#handoff-score').textContent = String(state.turnScore).padStart(3, '0'); $('#handoff-detail').textContent = hasNextPlayer ? `${state.players[state.playerIndex + 1].name} is next up.` : 'That closes the category for everyone.'; $('#handoff-button').textContent = hasNextPlayer ? `Pass to ${state.players[state.playerIndex + 1].name} →` : 'See category standings →'; showScreen('handoff');
+  const player = currentPlayer(); const category = roundCategory(); const hasNextPlayer = state.playerIndex < state.players.length - 1; $('#handoff-message').textContent = reason === 'time' ? `${player.name} ran out of time in ${category.category}.` : `${player.name} cleared the ${category.category} questions.`; $('#handoff-score').textContent = String(state.turnScore).padStart(3, '0'); $('#handoff-detail').textContent = hasNextPlayer ? `${state.players[state.playerIndex + 1].name} is next up.` : state.phase === 'lightning' ? 'That closes the lightning round for everyone.' : 'That closes the category for everyone.'; $('#handoff-button').textContent = hasNextPlayer ? `Pass to ${state.players[state.playerIndex + 1].name} →` : 'See the round report →'; showScreen('handoff');
 }
-function advanceAfterTurn() { if (state.playerIndex < state.players.length - 1) { state.playerIndex += 1; startTurn(); } else showCategoryResults(); }
+function advanceAfterTurn() { if (state.playerIndex < state.players.length - 1) { state.playerIndex += 1; startTurn(); } else if (state.phase === 'lightning') showLightningResults(); else showCategoryResults(); }
 function showCategoryResults() {
-  const category = currentCategory(); const sorted = [...state.players].sort((a, b) => b.total - a.total); $('#category-results-title').innerHTML = `${category.category.replace(' + ', '<br />')}<br /><em>complete.</em>`; $('#category-results-message').textContent = `Here is where the standings sit after ${category.category}.`; $('#category-standings').innerHTML = sorted.map((player, index) => `<div class="standing-row"><div><span class="place-number">${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong></div><div><span>${categoryScore(player, category.category)} pts</span><strong>${player.total}</strong></div></div>`).join(''); $('#next-category-button').textContent = state.categoryIndex < categories.length - 1 ? `Start ${categories[state.categoryIndex + 1].category} →` : 'Enter the death match →'; showScreen('category-results'); }
-function advanceAfterCategory() { if (state.categoryIndex < categories.length - 1) { state.categoryIndex += 1; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn(); } else beginDeathmatch(); }
+  const category = currentCategory(); const sorted = [...state.players].sort((a, b) => b.total - a.total); $('#category-results-title').innerHTML = `${category.category.replace(' + ', '<br />')}<br /><em>complete.</em>`; $('#category-results-message').textContent = `Here is where the standings sit after ${category.category}.`; $('#category-standings').innerHTML = sorted.map((player, index) => `<div class="standing-row"><div><span class="place-number">${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong></div><div><span>${categoryScore(player, category.category)} pts</span><strong>${player.total}</strong></div></div>`).join(''); $('#next-category-button').textContent = state.categoryIndex < categories.length - 1 ? `Start ${state.categoryOrder[state.categoryIndex + 1]} →` : 'Start the lightning round →'; showScreen('category-results'); }
+function showLightningResults() { const sorted = [...state.players].sort((a, b) => b.total - a.total); $('#category-results-title').innerHTML = 'Lightning<br /><em>complete.</em>'; $('#category-results-message').textContent = 'Double points have been added. The finalists are next.'; $('#category-standings').innerHTML = sorted.map((player, index) => `<div class="standing-row"><div><span class="place-number">${String(index + 1).padStart(2, '0')}</span><strong>${escapeHtml(player.name)}</strong></div><div><span>Lightning total</span><strong>${player.total}</strong></div></div>`).join(''); $('#next-category-button').textContent = 'Enter the death match →'; showScreen('category-results'); }
+function advanceAfterCategory() { if (state.categoryIndex < categories.length - 1) { state.categoryIndex += 1; state.playerIndex = 0; prepareCategoryQuestionDeck(); startTurn(); } else if (state.phase !== 'lightning') { state.phase = 'lightning'; state.playerIndex = 0; showScreen('lightning-intro'); } else beginDeathmatch(); }
+function startLightning() { state.phase = 'lightning'; state.playerIndex = 0; startTurn(); }
 function beginDeathmatch() { clearTimers(); state.deathmatchPlayers = [...state.players].sort((a, b) => b.total - a.total).slice(0, 2); state.deathmatchQuestions = shuffle(hardQuestions); state.deathmatchPlayerIndex = 0; state.deathmatchQuestionIndex = 0; state.deathmatchSelections = [null, null]; state.deathmatchRoundResolved = false; state.deathmatchWinner = null; state.deathmatchPlayers.forEach((player) => { player.deathmatchScore = 0; }); $('#finalist-preview').innerHTML = state.deathmatchPlayers.map((player, index) => `<div class="finalist-card"><span class="place-number">0${index + 1}</span><strong>${escapeHtml(player.name)}</strong><span>${player.total} total points</span></div>`).join('<div class="versus">VS</div>'); showScreen('deathmatch-intro'); }
 function startDeathmatchTurn() {
   clearTimers(); state.deathmatchPlayerIndex = 0; state.deathmatchQuestionIndex = 0; state.deathmatchSelections = [null, null]; state.deathmatchAnswered = false; state.deathmatchRoundResolved = false; state.deathmatchWinner = null; showScreen('deathmatch'); renderDeathmatchQuestion();
@@ -241,19 +273,23 @@ function nextDeathmatchQuestion() {
 }
 function renderChampion() { const [first, second] = [...state.deathmatchPlayers].sort((a, b) => b.deathmatchScore - a.deathmatchScore); const isTie = first.deathmatchScore === second.deathmatchScore; $('#winner-name').textContent = isTie ? 'Shared crown' : first.name; $('#winner-score').textContent = String(first.deathmatchScore).padStart(3, '0'); $('#champion-message').textContent = isTie ? `${first.name} and ${second.name} finished level in sudden death.` : `${first.name} won sudden death and the Culture Deck crown.`; $('#final-scoreboard').innerHTML = `<div><span>Finalist</span><strong>${escapeHtml(first.name)}</strong><b>${first.deathmatchScore}</b></div><div><span>Finalist</span><strong>${escapeHtml(second.name)}</strong><b>${second.deathmatchScore}</b></div>`; showScreen('champion'); }
 
-function resetTournament() { clearTimers(); state.playerDraft = state.players.map((player) => player.name); if (state.playerDraft.length < 2) state.playerDraft = ['', '']; renderSetup(); showScreen('setup'); }
+function resetTournament() { clearTimers(); state.phase = 'category'; state.playerDraft = state.players.map((player) => player.name); if (state.playerDraft.length < 2) state.playerDraft = ['', '']; renderSetup(); showScreen('setup'); }
 
 $('#start-button').addEventListener('click', () => { renderSetup(); showScreen('setup'); });
 $('#add-player-button').addEventListener('click', () => { if (state.playerDraft.length < 8) { state.playerDraft.push(''); renderSetup(); document.querySelector(`#player-${state.playerDraft.length - 1}`).focus(); } });
 $('#start-tournament-button').addEventListener('click', startTournament);
+$('#difficulty-select').addEventListener('change', () => { state.difficulty = $('#difficulty-select').value; });
+$('#draft-toggle').addEventListener('change', () => { state.draftMode = $('#draft-toggle').checked; renderSetup(); });
 $('#round-next-button').addEventListener('click', nextRoundQuestion);
 $('#handoff-button').addEventListener('click', advanceAfterTurn);
 $('#next-category-button').addEventListener('click', advanceAfterCategory);
+$('#start-lightning-button').addEventListener('click', startLightning);
 $('#start-deathmatch-button').addEventListener('click', startDeathmatchTurn);
 $('#deathmatch-next-button').addEventListener('click', nextDeathmatchQuestion);
 $('#deathmatch-pass-button').addEventListener('click', startSecondDeathmatchLockIn);
 $('#play-again-button').addEventListener('click', () => { state.playerDraft = state.players.map((player) => player.name); renderSetup(); startTournament(); });
 $('#new-tournament-button').addEventListener('click', resetTournament);
 document.addEventListener('keydown', (event) => { if (event.key === 'Enter' && event.target.matches('.answer-button')) event.target.click(); if (event.key.toLowerCase() === 'n' && !screens.round.hidden && !$('#round-next-button').hidden && !event.target.matches('input, textarea')) nextRoundQuestion(); });
+loadExternalDeck();
 showScreen('start');
 window.__cultureDeckReady = true;

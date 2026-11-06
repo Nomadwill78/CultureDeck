@@ -1,0 +1,39 @@
+{
+  "name": "Community Starter Deck",
+  "version": 1,
+  "categories": [
+    {
+      "category": "Music",
+      "questions": [
+        {
+          "text": "Which Memphis label helped define the sound of Southern hip-hop in the 1990s?",
+          "answers": ["Three 6 Mafia's Hypnotize Minds", "Motown", "Death Row Records", "Bad Boy Records"],
+          "correct": "Three 6 Mafia's Hypnotize Minds",
+          "note": "Hypnotize Minds helped bring Memphis rap's dark, independent sound to a national audience."
+        }
+      ]
+    },
+    {
+      "category": "History",
+      "questions": [
+        {
+          "text": "Which Memphis institution is known for preserving the legacy of Stax Records?",
+          "answers": ["Stax Museum of American Soul Music", "The Cotton Museum", "Dixon Gallery", "Memphis Brooks Museum"],
+          "correct": "Stax Museum of American Soul Music",
+          "note": "The museum is located at the original site of Stax Records in South Memphis."
+        }
+      ]
+    },
+    {
+      "category": "Internet culture",
+      "questions": [
+        {
+          "text": "What does the phrase \"main character energy\" usually describe?",
+          "answers": ["Confidently treating your life like a story worth leading", "Avoiding every social event", "Working only in film", "Being the oldest person in a group"],
+          "correct": "Confidently treating your life like a story worth leading",
+          "note": "The phrase became a popular way to describe self-directed confidence and presence."
+        }
+      ]
+    }
+  ]
+}

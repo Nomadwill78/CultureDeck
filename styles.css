@@ -133,3 +133,16 @@ h1 em, h2 em { color: var(--orange); font-style: normal; }
 .load-error { position: fixed; left: 16px; right: 16px; bottom: 16px; z-index: 50; padding: 16px 18px; background: #181716; color: #fff; border-radius: 6px; font: 16px/1.4 'Space Grotesk', system-ui, sans-serif; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
 .load-error p { margin: 0 0 12px; }
 .load-error button { font: 600 16px 'Space Grotesk', system-ui, sans-serif; padding: 10px 16px; border: 0; border-radius: 4px; background: #fff; color: #181716; cursor: pointer; }
+
+/* Phase 1 controls */
+.phase-one-options { border-top: 1px solid var(--line); margin-top: 22px; padding-top: 18px; display: grid; gap: 12px; }
+.select-label, .toggle-label { color: var(--muted); font: 10px var(--mono); text-transform: uppercase; letter-spacing: .08em; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.select-label select { border: 1px solid var(--line); background: var(--paper); color: var(--ink); padding: 9px 10px; font: 11px var(--mono); text-transform: uppercase; }
+.toggle-label { justify-content: flex-start; cursor: pointer; }.toggle-label input { accent-color: var(--cobalt); width: 17px; height: 17px; }
+.option-note { margin: 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.category-draft-list { display: grid; gap: 5px; margin-top: 2px; }
+.draft-row { display: grid; grid-template-columns: 25px 1fr 28px 28px; gap: 6px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.draft-row > span { color: var(--orange); font: 10px var(--mono); }.draft-row strong { font-size: 12px; }.draft-row button { border: 1px solid var(--line); background: var(--paper); color: var(--cobalt); min-height: 27px; }.draft-row button:disabled { opacity: .35; cursor: not-allowed; }
+.wager-control { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: -14px 0 24px; padding: 10px 12px; border-left: 3px solid var(--yellow); background: var(--paper-deep); max-width: 620px; }
+.wager-control label, .wager-control span { color: var(--muted); font: 9px var(--mono); text-transform: uppercase; }.wager-control select { border: 1px solid var(--line); background: var(--paper); padding: 7px 9px; color: var(--ink); font: 10px var(--mono); }.wager-control span { margin-left: auto; }
+@media (max-width: 680px) { .select-label { align-items: flex-start; flex-direction: column; }.select-label select { width: 100%; }.wager-control { align-items: flex-start; flex-direction: column; }.wager-control span { margin-left: 0; } }

@@ -82,6 +82,19 @@
             </div>
             <p id="setup-error" class="form-message" role="status" aria-live="polite"></p>
             <div class="category-strip"><span class="panel-label">The five rounds</span><div id="category-list" class="category-list"></div></div>
+            <div class="phase-one-options" aria-labelledby="phase-one-options-label">
+              <span id="phase-one-options-label" class="panel-label">Phase 1 house rules</span>
+              <label class="select-label" for="difficulty-select">Difficulty
+                <select id="difficulty-select">
+                  <option value="casual">Casual · 1:30 turns</option>
+                  <option value="competitive" selected>Competitive · 1:15 turns</option>
+                  <option value="expert">Expert · 1:00 turns</option>
+                </select>
+              </label>
+              <label class="toggle-label"><input id="draft-toggle" type="checkbox" /> Draft the category order</label>
+              <div id="category-draft-list" class="category-draft-list" hidden></div>
+              <p class="option-note">Draft mode lets the host arrange the five categories before the tournament begins. Each player may wager once per category.</p>
+            </div>
           </div>
         </section>
 
@@ -100,6 +113,7 @@
               <img id="round-category-art" class="question-art" src="/art/music-culture.png" alt="Music illustration" />
               <div class="question-kicker"><span id="round-question-category">MUSIC</span><span class="kicker-rule"></span></div>
               <h2 id="round-question">Question loading…</h2>
+              <div id="wager-control" class="wager-control" hidden><label for="wager-select">Optional wager</label><select id="wager-select"><option value="0">No wager</option><option value="50">Risk 50 points</option><option value="100">Risk 100 points</option><option value="200">Risk 200 points</option></select><span id="wager-status">One wager per category</span></div>
               <div id="round-answers" class="answers" role="group" aria-label="Answer choices"></div>
               <div id="round-feedback" class="feedback" role="status" aria-live="polite" hidden><div id="round-feedback-icon" class="feedback-icon" aria-hidden="true">✓</div><div><strong id="round-feedback-title">Correct!</strong><p id="round-feedback-copy"></p></div></div>
               <button id="round-next-button" class="button button-primary next-button" type="button" hidden>Next question <span aria-hidden="true">→</span></button>
@@ -122,6 +136,14 @@
           <p id="category-results-message" class="screen-lede">Here is where the standings sit after Music.</p>
           <div class="standings-card"><div class="standings-card-header"><span>Place / Player</span><span>Round / Total</span></div><div id="category-standings" class="standings-list"></div></div>
           <button id="next-category-button" class="button button-primary" type="button">Start the next category <span aria-hidden="true">→</span></button>
+        </section>
+
+        <section id="lightning-intro-screen" class="screen centered-screen" aria-labelledby="lightning-intro-title" hidden>
+          <p class="eyebrow"><span class="eyebrow-line"></span> Phase 1 bonus round</p>
+          <h2 id="lightning-intro-title">Light up<br /><em>the deck.</em></h2>
+          <p class="screen-lede">Every player gets a fast mixed-category run. Correct answers are worth double points, and there are no wagers in the lightning round.</p>
+          <div class="turn-summary"><span class="panel-label">Format</span><strong>00:30</strong><span>Eight mixed-category questions per player</span></div>
+          <button id="start-lightning-button" class="button button-primary" type="button">Start the lightning round <span aria-hidden="true">→</span></button>
         </section>
 
         <section id="deathmatch-intro-screen" class="screen deathmatch-intro" aria-labelledby="deathmatch-intro-title" hidden>
@@ -169,6 +191,6 @@
       setTimeout(function () { if (!window.__cultureDeckReady) document.getElementById('load-error').hidden = false; }, 4000);
     </script>
     <script nomodule>document.getElementById('load-error').hidden = false;</script>
-    <script src="/app.js?v=20261018" type="module"></script>
+    <script src="/app.js?v=20261105" type="module"></script>
   </body>
 </html>
